@@ -79,12 +79,27 @@ export default function Search({ onPlayTrack, currentTrack }) {
         body: JSON.stringify(track)
       });
       if (res.ok) {
-        // Toggle dropdown closed
         setActiveDropdown(null);
         alert(`Added "${track.title}" to playlist!`);
+      } else {
+        throw new Error("Offline");
       }
     } catch (e) {
-      console.error(e);
+      // Local fallback for playlists
+      const updated = playlists.map(pl => {
+        if (pl.id === playlistId) {
+          const trackList = pl.tracks ? [...pl.tracks] : [];
+          if (!trackList.some(t => t.trackId === track.trackId)) {
+            trackList.push(track);
+          }
+          return { ...pl, tracks: trackList };
+        }
+        return pl;
+      });
+      setPlaylists(updated);
+      localStorage.setItem('rampx_playlists', JSON.stringify(updated));
+      setActiveDropdown(null);
+      alert(`Added "${track.title}" to playlist (Saved locally)!`);
     }
   };
 

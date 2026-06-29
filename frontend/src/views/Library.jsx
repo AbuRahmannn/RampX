@@ -24,9 +24,14 @@ export default function Library({ onPlayTrack, currentTrack, favorites, onToggle
       if (res.ok) {
         const data = await res.json();
         setHistory(data);
+        localStorage.setItem('rampx_history', JSON.stringify(data));
+      } else {
+        const local = localStorage.getItem('rampx_history');
+        if (local) setHistory(JSON.parse(local));
       }
     } catch (e) {
-      console.error("Error fetching library history", e);
+      const local = localStorage.getItem('rampx_history');
+      if (local) setHistory(JSON.parse(local));
     }
   };
 
@@ -36,13 +41,32 @@ export default function Library({ onPlayTrack, currentTrack, favorites, onToggle
       if (res.ok) {
         const data = await res.json();
         setPlaylists(data);
+        localStorage.setItem('rampx_playlists', JSON.stringify(data));
         if (selectedPlaylist) {
           const updated = data.find(p => p.id === selectedPlaylist.id);
           setSelectedPlaylist(updated || null);
         }
+      } else {
+        const local = localStorage.getItem('rampx_playlists');
+        if (local) {
+          const parsed = JSON.parse(local);
+          setPlaylists(parsed);
+          if (selectedPlaylist) {
+            const updated = parsed.find(p => p.id === selectedPlaylist.id);
+            setSelectedPlaylist(updated || null);
+          }
+        }
       }
     } catch (e) {
-      console.error("Error fetching playlists", e);
+      const local = localStorage.getItem('rampx_playlists');
+      if (local) {
+        const parsed = JSON.parse(local);
+        setPlaylists(parsed);
+        if (selectedPlaylist) {
+          const updated = parsed.find(p => p.id === selectedPlaylist.id);
+          setSelectedPlaylist(updated || null);
+        }
+      }
     }
   };
 
@@ -60,24 +84,42 @@ export default function Library({ onPlayTrack, currentTrack, favorites, onToggle
   const handleCreatePlaylist = async (e) => {
     e.preventDefault();
     if (!newPlaylistName.trim()) return;
+    const cleanName = newPlaylistName.trim();
+    
+    // Optimistic / Fallback local state update
+    const newLocalPl = {
+      id: Date.now(),
+      name: cleanName,
+      createdAt: new Date().toISOString(),
+      tracks: []
+    };
+    const updated = [...playlists, newLocalPl];
+
     try {
       const res = await fetch('/api/library/playlists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newPlaylistName.trim() })
+        body: JSON.stringify({ name: cleanName })
       });
       if (res.ok) {
         setNewPlaylistName('');
         fetchPlaylists();
+      } else {
+        throw new Error("Offline");
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      setNewPlaylistName('');
+      setPlaylists(updated);
+      localStorage.setItem('rampx_playlists', JSON.stringify(updated));
     }
   };
 
   const handleDeletePlaylist = async (id, name, e) => {
     if (e) e.stopPropagation();
     if (!confirm(`Are you sure you want to delete playlist "${name}"?`)) return;
+    
+    const updated = playlists.filter(p => p.id !== id);
+
     try {
       const res = await fetch(`/api/library/playlists/${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -85,15 +127,31 @@ export default function Library({ onPlayTrack, currentTrack, favorites, onToggle
           setSelectedPlaylist(null);
         }
         fetchPlaylists();
+      } else {
+        throw new Error("Offline");
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      if (selectedPlaylist && selectedPlaylist.id === id) {
+        setSelectedPlaylist(null);
+      }
+      setPlaylists(updated);
+      localStorage.setItem('rampx_playlists', JSON.stringify(updated));
     }
   };
 
   const handleRemoveTrack = async (trackId, e) => {
     if (e) e.stopPropagation();
     if (!selectedPlaylist) return;
+
+    // Fallback local playlist track removal
+    const updated = playlists.map(pl => {
+      if (pl.id === selectedPlaylist.id) {
+        const trackList = pl.tracks ? pl.tracks.filter(t => t.trackId !== trackId) : [];
+        return { ...pl, tracks: trackList };
+      }
+      return pl;
+    });
+
     try {
       const res = await fetch(`/api/library/playlists/${selectedPlaylist.id}/remove`, {
         method: 'POST',
@@ -102,9 +160,14 @@ export default function Library({ onPlayTrack, currentTrack, favorites, onToggle
       });
       if (res.ok) {
         fetchPlaylists();
+      } else {
+        throw new Error("Offline");
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      setPlaylists(updated);
+      localStorage.setItem('rampx_playlists', JSON.stringify(updated));
+      const targetPl = updated.find(p => p.id === selectedPlaylist.id);
+      setSelectedPlaylist(targetPl || null);
     }
   };
 
@@ -116,9 +179,12 @@ export default function Library({ onPlayTrack, currentTrack, favorites, onToggle
       const res = await fetch('/api/library/history', { method: 'DELETE' });
       if (res.ok) {
         fetchHistory();
+      } else {
+        throw new Error("Offline");
       }
     } catch (e) {
-      console.error("Error clearing history", e);
+      setHistory([]);
+      localStorage.setItem('rampx_history', JSON.stringify([]));
     }
   };
 

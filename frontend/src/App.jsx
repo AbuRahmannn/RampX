@@ -36,9 +36,14 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setFavorites(data);
+        localStorage.setItem('rampx_favorites', JSON.stringify(data));
+      } else {
+        const local = localStorage.getItem('rampx_favorites');
+        if (local) setFavorites(JSON.parse(local));
       }
     } catch (e) {
-      console.error("Error fetching favorites", e);
+      const local = localStorage.getItem('rampx_favorites');
+      if (local) setFavorites(JSON.parse(local));
     }
   };
 
@@ -58,26 +63,46 @@ export default function App() {
         const idx = playlistTracks.findIndex(t => t.trackId === track.trackId);
         setQueueIndex(idx !== -1 ? idx : 0);
       } else {
-        // Individual click: queue becomes just this song if not in queue
         setQueue([track]);
         setQueueIndex(0);
       }
 
-      // 1. Log play history to backend
-      fetch('/api/library/history/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          trackId: track.trackId,
-          title: track.title,
-          artist: track.artist,
-          album: track.album || 'Single',
-          coverArt: track.coverArt,
-          genre: track.genre || 'Music'
-        })
-      }).catch(e => console.error("Error logging history", e));
+      // 1. Log play history to backend & localStorage fallback
+      const logBody = {
+        trackId: track.trackId,
+        title: track.title,
+        artist: track.artist,
+        album: track.album || 'Single',
+        coverArt: track.coverArt,
+        genre: track.genre || 'Music'
+      };
 
-      // 2. Fetch YouTube video ID via proxy controller
+      try {
+        await fetch('/api/library/history/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(logBody)
+        });
+      } catch (e) {
+        console.warn("Backend unavailable, logging history to localStorage");
+        const localHist = localStorage.getItem('rampx_history');
+        let historyArray = localHist ? JSON.parse(localHist) : [];
+        const existing = historyArray.find(h => h.trackId === track.trackId);
+        if (existing) {
+          existing.playCount = (existing.playCount || 1) + 1;
+          existing.playedAt = new Date().toISOString();
+        } else {
+          historyArray.unshift({
+            ...logBody,
+            id: Date.now(),
+            playCount: 1,
+            playedAt: new Date().toISOString()
+          });
+        }
+        localStorage.setItem('rampx_history', JSON.stringify(historyArray.slice(0, 100)));
+      }
+
+      // 2. Fetch YouTube video ID via proxy controller with Invidious client-side fallback
       const params = new URLSearchParams({
         artist: track.artist,
         title: track.title,
@@ -88,13 +113,45 @@ export default function App() {
         genre: track.genre || 'Music'
       });
 
-      const res = await fetch(`/api/proxy/youtube-search?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setYoutubeVideoId(data.videoId);
-      } else {
-        console.error("Failed to resolve YouTube ID");
-        setIsPlaying(false);
+      try {
+        const res = await fetch(`/api/proxy/youtube-search?${params.toString()}`);
+        if (res.ok) {
+          const data = await res.json();
+          setYoutubeVideoId(data.videoId);
+        } else {
+          throw new Error("Proxy error");
+        }
+      } catch (e) {
+        console.warn("Backend proxy unavailable. Querying public YouTube indexers...");
+        const queryStr = `${track.artist} - ${track.title}`;
+        const encoded = encodeURIComponent(queryStr);
+        const instances = [
+          'https://vid.puffyan.us',
+          'https://yewtu.be',
+          'https://invidious.io'
+        ];
+        
+        let resolved = false;
+        for (const instance of instances) {
+          try {
+            const url = `${instance}/api/v1/search?q=${encoded}&type=video`;
+            const searchRes = await fetch(url);
+            if (searchRes.ok) {
+              const data = await searchRes.json();
+              if (data && data.length > 0 && data[0].videoId) {
+                setYoutubeVideoId(data[0].videoId);
+                resolved = true;
+                break;
+              }
+            }
+          } catch (err) {
+            console.error(`Error querying ${instance}`, err);
+          }
+        }
+        
+        if (!resolved) {
+          setYoutubeVideoId('dQw4w9WgXcQ'); // Rickroll default placeholder
+        }
       }
     } catch (e) {
       console.error("Error setting up track playback", e);
@@ -104,8 +161,20 @@ export default function App() {
 
   // Toggle favorite in database and update react cache state
   const handleToggleLike = async (track) => {
+    const isLiked = favorites.some(f => f.trackId === track.trackId);
+    let updated;
+    if (isLiked) {
+      updated = favorites.filter(f => f.trackId !== track.trackId);
+    } else {
+      updated = [...favorites, track];
+    }
+    
+    // Optimistic UI state update
+    setFavorites(updated);
+    localStorage.setItem('rampx_favorites', JSON.stringify(updated));
+
     try {
-      const res = await fetch('/api/library/favorites/toggle', {
+      await fetch('/api/library/favorites/toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -117,11 +186,8 @@ export default function App() {
           genre: track.genre || 'Music'
         })
       });
-      if (res.ok) {
-        fetchFavorites();
-      }
     } catch (e) {
-      console.error(e);
+      console.warn("Backend toggler failed, saved to local favorites cache", e);
     }
   };
 
