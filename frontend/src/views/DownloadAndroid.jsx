@@ -8,7 +8,10 @@ export default function DownloadAndroid() {
     setDownloadStarted(true);
     // Trigger direct file download
     const link = document.createElement('a');
-    link.href = '/rampx.apk';
+    const basePath = window.location.pathname.endsWith('/') 
+      ? window.location.pathname 
+      : window.location.pathname + '/';
+    link.href = basePath + 'rampx.apk';
     link.download = 'RampX.apk';
     document.body.appendChild(link);
     link.click();
