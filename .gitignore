@@ -1,0 +1,22 @@
+# H2 database files
+ramix-db.mv.db
+ramix-db.trace.db
+
+# Maven build targets
+backend/target/
+target/
+
+# Node dependencies and build assets
+frontend/node_modules/
+frontend/dist/
+node_modules/
+dist/
+
+# IDE / Editor configurations
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Log files
+*.log
