@@ -327,55 +327,192 @@ body {
 
 @media (max-width: 768px) {
   .app-container {
-    grid-template-columns: 1fr;
-    grid-template-rows: 60px 1fr 105px;
-    grid-template-areas:
-      "header"
-      "main"
-      "player";
-    padding: 10px;
-    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .sidebar-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    padding: 0 10px !important;
+    flex-direction: row !important;
+    gap: 0 !important;
+    z-index: 1000;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(10, 10, 15, 0.96) !important;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.8) !important;
+  }
+
+  /* Hide app logo and version footer in sidebar on mobile */
+  .sidebar-area > div:first-child,
+  .sidebar-area > div:last-child {
+    display: none !important;
+  }
+
+  .sidebar-area nav {
+    flex-direction: row !important;
+    width: 100% !important;
+    height: 100% !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    gap: 0 !important;
+  }
+
+  .sidebar-area nav button {
+    width: auto !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    padding: 6px 12px !important;
+    font-size: 0.72rem !important;
+    color: var(--text-muted) !important;
+  }
+
+  .sidebar-area nav button.active {
+    color: #ffffff !important;
+  }
+
+  .sidebar-area nav button.active svg {
+    color: #ffffff !important;
+  }
+
+  .sidebar-area nav button span {
+    font-size: 0.68rem !important;
+    font-weight: 500 !important;
+  }
+
+  .main-area {
+    height: calc(100vh - 125px) !important; /* Subtracting 60px nav + 65px player */
+    border-radius: 0 !important;
+    border: none !important;
+    padding: 16px !important;
+    overflow-y: auto !important;
+    background: rgba(0, 0, 0, 0.75) !important;
+  }
+
+  .player-area {
+    position: fixed;
+    bottom: 60px;
+    left: 0;
+    right: 0;
+    height: 65px !important;
+    padding: 0 16px !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+    background: rgba(15, 15, 20, 0.95) !important;
+    z-index: 999;
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.5) !important;
+    gap: 12px !important;
+  }
+
+  .player-left-section {
+    width: 65% !important;
+    min-width: 0 !important;
+  }
+
+  .player-center-section {
+    width: 35% !important;
+    min-width: 0 !important;
+    justify-content: flex-end !important;
+    flex-direction: row !important;
+    gap: 12px !important;
+  }
+
+  .player-right-section {
+    display: none !important; /* Hide right volume panel completely */
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block !important;
+  }
+
+  /* Queue Drawer Adjustment */
+  .queue-drawer {
+    top: 0 !important;
+    right: -100vw !important;
+    width: 100vw !important;
+    height: calc(100vh - 60px) !important;
+    border-radius: 0 !important;
+    border: none !important;
+    background: rgba(8, 8, 12, 0.98) !important;
+  }
+
+  .queue-drawer.open {
+    right: 0 !important;
+  }
+
+  /* Liquid AI header widget layout on mobile */
+  .home-header-panel {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 20px !important;
+    gap: 20px !important;
+  }
+
+  /* Mixes and albums layouts adjustment */
+  .mixes-row {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  /* Responsive Grid utility classes */
+  .library-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  .playlist-split-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  .download-buttons-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
   }
 }
 
-.sidebar-area {
-  grid-area: sidebar;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+/* Defaults for helper classes */
+.desktop-only {
+  display: block;
 }
-
-.main-area {
-  grid-area: main;
-  height: 100%;
-  overflow-y: auto;
-  padding: 30px;
-  border-radius: var(--apple-radius);
-  background: rgba(4, 4, 6, 0.45); /* Apple-style overlay */
-  border: var(--glass-border);
+.mobile-only {
+  display: none;
 }
-
-.player-area {
-  grid-area: player;
-  width: 100%;
-  height: 100%;
+.library-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
 }
-
-/* Sliding Drawer for Queue */
-.queue-drawer {
-  position: fixed;
-  top: 20px;
-  right: -360px; /* Initially hidden */
-  width: 320px;
-  height: calc(100vh - 165px);
-  z-index: 998;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  transition: right 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+.playlist-split-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
 }
-
-.queue-drawer.open {
-  right: 20px;
+.download-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }

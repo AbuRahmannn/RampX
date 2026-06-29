@@ -119,7 +119,7 @@ export default function Playlists({ onPlayTrack, currentTrack }) {
       <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.06)' }} />
 
       {/* Main Area: Split between Playlist List and Playlist Track Details */}
-      <div style={{ display: 'grid', gridTemplateColumns: selectedPlaylist ? '300px 1fr' : '1fr', gap: '24px', transition: 'all 0.3s ease' }}>
+      <div className="playlist-split-grid" style={{ transition: 'all 0.3s ease' }}>
         
         {/* Left/Main Column: Playlists List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

@@ -101,7 +101,7 @@ export default function DownloadAndroid() {
         </div>
 
         {/* Download Buttons Section */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', flexWrap: 'wrap' }}>
+        <div className="download-buttons-grid">
           
           {/* Direct APK Box */}
           <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', background: 'rgba(255,255,255,0.015)' }}>

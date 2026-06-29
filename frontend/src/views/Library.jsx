@@ -313,7 +313,7 @@ export default function Library({ onPlayTrack, currentTrack, favorites, onToggle
         <>
           {/* VIEW: ALL COLLECTIONS */}
           {activeFilter === 'all' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+            <div className="library-grid">
               
               {/* Playlists and Faves Summary */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
@@ -479,7 +479,7 @@ export default function Library({ onPlayTrack, currentTrack, favorites, onToggle
 
           {/* VIEW: PLAYLISTS SECTION */}
           {activeFilter === 'playlists' && (
-            <div style={{ display: 'grid', gridTemplateColumns: selectedPlaylist ? '300px 1fr' : '1fr', gap: '24px' }}>
+            <div className="playlist-split-grid">
               
               {/* Left Column: List Playlists & Create Form */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

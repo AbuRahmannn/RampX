@@ -118,8 +118,23 @@ export default function MusicPlayer({
       position: 'relative'
     }}>
       
+      {/* Top Progress Line (Mobile Only) */}
+      <div 
+        className="mobile-only"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          height: '2.5px',
+          background: '#ffffff',
+          width: `${(currentTime / (duration || 1)) * 100}%`,
+          transition: 'width 0.1s linear',
+          boxShadow: '0 0 10px rgba(255, 255, 255, 0.4)'
+        }}
+      />
+      
       {/* Left: Track Info & Liquid AI Light */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '30%', minWidth: '220px' }}>
+      <div className="player-left-section" style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '30%', minWidth: '220px' }}>
         <img 
           src={currentTrack.coverArt || 'https://via.placeholder.com/60'} 
           alt={currentTrack.title} 
@@ -191,12 +206,13 @@ export default function MusicPlayer({
       </div>
 
       {/* Center: Controls & Scrubber */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', flex: 1, maxWidth: '600px' }}>
+      <div className="player-center-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', flex: 1, maxWidth: '600px' }}>
         {/* Playback Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           {/* Shuffle Toggle */}
           <button 
             onClick={() => setIsShuffling(!isShuffling)} 
+            className="desktop-only"
             style={{ 
               background: 'transparent', 
               border: 'none', 
@@ -243,6 +259,7 @@ export default function MusicPlayer({
               else if (repeatMode === 'queue') setRepeatMode('one');
               else setRepeatMode('off');
             }}
+            className="desktop-only"
             style={{ 
               background: 'transparent', 
               border: 'none', 
@@ -258,7 +275,7 @@ export default function MusicPlayer({
         </div>
 
         {/* Playback Progress Scrubber */}
-        <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '12px' }}>
+        <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '12px' }}>
           <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', width: '35px', textAlign: 'right' }}>
             {formatTime(currentTime)}
           </span>
@@ -278,7 +295,7 @@ export default function MusicPlayer({
       </div>
 
       {/* Right: Volume & Queue Toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '30%', minWidth: '200px', justifyContent: 'flex-end' }}>
+      <div className="player-right-section" style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '30%', minWidth: '200px', justifyContent: 'flex-end' }}>
         
         {/* Play Queue Drawer Toggle Button */}
         <button 
@@ -296,7 +313,7 @@ export default function MusicPlayer({
           <ListMusic size={18} />
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button 
             onClick={() => setIsMuted(!isMuted)} 
             style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}
